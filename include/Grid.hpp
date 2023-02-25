@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <vector>
 #include "Vec2i.hpp"
 
@@ -17,11 +16,7 @@ public:
     const T& Get(const Vec2i& pos) const;
     void Set(const Vec2i& pos, const T& value);
 
-    void Fill(const T& value);
-
-    void Print() const;
-
-private:
+protected:
     Vec2i m_size;
     std::vector<T> m_cells;
 };
@@ -45,27 +40,4 @@ const T& Grid<T>::Get(const Vec2i& pos) const {
 template <typename T>
 void Grid<T>::Set(const Vec2i& pos, const T& value) {
     m_cells[pos.y*m_size.x+pos.x] = value;
-}
-
-template <typename T>
-void Grid<T>::Fill(const T& value) {
-    for(int y = 0; y < m_size.y; ++y)
-    {
-        for(int x = 0; x < m_size.x; ++x)
-        {
-            Set(Vec2i(x,y), value);
-        }
-    }
-}
-
-template <typename T>
-void Grid<T>::Print() const {
-    for(int y = 0; y < m_size.y; ++y)
-    {
-        for(int x = 0; x < m_size.x; ++x)
-        {
-            std::cout << Get(Vec2i(x,y));
-        }
-        std::cout << std::endl;
-    }
 }
