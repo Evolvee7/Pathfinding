@@ -23,7 +23,7 @@ struct Cell
 
 int main()
 {
-    // Stages:
+    // Stages of pathfinding:
     // 1) make solvable grid
     // 2) starting at finish:
     //    a) add finish cell with counter = 0 to queue and main_list
@@ -109,6 +109,7 @@ int main()
     // Grid to mark counter values
     Grid<int> counter_grid(grid_size);
     counter_grid.Fill(9999);   // Fill with high enough number
+
     // Mark counters onto grid
     for(const Cell& cell: main_list)
     {
@@ -119,7 +120,6 @@ int main()
 
 // 4) Path creation phase
 
-    char path_mark= 'o';
     std::vector<Vec2i> path;
     path.emplace_back(start);
 
@@ -136,17 +136,21 @@ int main()
                 lowest_value_cell = new_lowest_value_cell;
             }
         }
-
         path.emplace_back(lowest_value_cell.pos);
     }
 
-    // Grid with the shortest path
-    Grid<char> final_grid(inital_grid);
+
+// 5) Show solved grid
+
+    char path_mark = 'o';
+    Grid<char> solved_grid(inital_grid);
+
     for(const Vec2i& pos: path)
     {
-        final_grid.Set(pos, path_mark);
+        if(pos != start && pos != finish)
+            solved_grid.Set(pos, path_mark);
     }
-    PrintGrid(final_grid);
+    PrintGrid(solved_grid);
 
     return 0;
 }
