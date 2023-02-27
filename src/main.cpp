@@ -10,9 +10,6 @@
 // TODO: Prevent looping infinitely if grid is not solvable
 // TODO: Choose start and finish position, after grid size is set
 
-void PrintGrid(const Grid<int>& grid);
-void PrintGrid(const Grid<char>& grid);
-void DrawGrid(const Grid<char>& grid, SDL_Renderer* renderer);
 
 struct Cell
 {
@@ -23,6 +20,15 @@ struct Cell
     {
     }
 };
+
+std::vector<Cell> GetCellsAround(const Grid<char>& grid, const Vec2i& begin, const Vec2i& end, char wall_mark);
+void MarkCellCounters(Grid<int>& grid, const std::vector<Cell>& cells);
+std::vector<Vec2i> GetPath(const Grid<int>& grid, const Vec2i& start, const Vec2i& finish);
+
+void PrintGrid(const Grid<int>& grid);
+void PrintGrid(const Grid<char>& grid);
+void DrawGrid(const Grid<char>& grid, SDL_Renderer* renderer);
+
 
 int main()
 {
@@ -105,45 +111,8 @@ int main()
 
 // 2) Make cells phase
 
-    // Keeps track of all created Cells
-    std::vector<Cell> main_list;
-
-    // Temporary stores Cells
-    std::queue<Cell> queue;
-
-    // Start from finish
-    Cell inital_cell(finish, 0);
-    main_list.emplace_back(inital_cell);
-    queue.emplace(inital_cell);
-
-    bool solved = false;
-    while(solved == false) 
-    {
-        const Cell cell = queue.front();
-        queue.pop();
-        
-        for(const Vec2i& pos: inital_grid.GetAdjecentTo(cell.pos))
-        {
-            // Skip if position is occupied by wall
-            if(inital_grid.Get(pos) == wall_mark)
-                continue;
-            
-            // Skip if position already exists in main_list
-            if(std::find_if(main_list.begin(), main_list.end(), [&](const Cell& cell){ return cell.pos == pos; }) != main_list.end())
-                continue;
-            
-            Cell new_cell(pos, cell.counter + 1);
-            main_list.emplace_back(new_cell);
-
-            if(inital_grid.Get(pos) == start_mark)
-            {
-                solved = true;
-                break;
-            }
-
-            queue.emplace(new_cell);
-        }
-    }
+    
+    std::vector<Cell> main_list = GetCellsAround(inital_grid, finish, start, wall_mark);
 
 
 // 3) Mark cells counter values
@@ -152,34 +121,15 @@ int main()
     Grid<int> counter_grid(grid_size);
     counter_grid.Fill(9999);   // Fill with high enough number
 
-    // Mark counters onto grid
-    for(const Cell& cell: main_list)
-    {
-        counter_grid.Set(cell.pos, cell.counter);
-    }
+    MarkCellCounters(counter_grid, main_list);
+
     PrintGrid(counter_grid);
 
 
 // 4) Path creation phase
 
-    std::vector<Vec2i> path;
-    path.emplace_back(start);
 
-    while(path.back() != finish)
-    {
-        const Vec2i& point = path.back();
-        Cell lowest_value_cell(point, 9999);
-
-        for(const Vec2i& pos: counter_grid.GetAdjecentTo(point))
-        {
-            if(counter_grid.Get(pos) < lowest_value_cell.counter)
-            {
-                Cell new_lowest_value_cell(pos, counter_grid.Get(pos));
-                lowest_value_cell = new_lowest_value_cell;
-            }
-        }
-        path.emplace_back(lowest_value_cell.pos);
-    }
+    std::vector<Vec2i> path = GetPath(counter_grid, start, finish);
 
 
 // 5) Show solved grid
@@ -207,6 +157,14 @@ int main()
             case SDL_KEYUP:
                 quit = true;
                 break;
+            case SDL_MOUSEBUTTONUP:
+                Vec2i mouse_pos(0,0);
+                SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
+                // 1) Check if grid is solvable?
+                // 2) Update* grid only if:
+                // - only 1 start and finish will exist
+                //
+                // *Update = change . -> X -> S -> F -> .   ,etc...
         }
     }
 
@@ -216,6 +174,84 @@ int main()
     SDL_Quit();
 
     return 0;
+}
+
+
+
+std::vector<Cell> GetCellsAround(const Grid<char>& grid, const Vec2i& begin, const Vec2i& end, char wall_mark)
+{
+    std::vector<Cell> cells_around;
+
+    // Temporary stores Cells
+    std::queue<Cell> queue;
+
+    // Start from finish
+    Cell inital_cell(begin, 0);
+    cells_around.emplace_back(inital_cell);
+    queue.emplace(inital_cell);
+
+    bool solved = false;
+    while(solved == false) 
+    {
+        const Cell cell = queue.front();
+        queue.pop();
+        
+        for(const Vec2i& pos: grid.GetAdjecentTo(cell.pos))
+        {
+            // Skip if position is occupied by wall
+            if(grid.Get(pos) == wall_mark)
+                continue;
+            
+            // Skip if position is already stored
+            if(std::find_if(cells_around.begin(), cells_around.end(), [&](const Cell& cell){ return cell.pos == pos; }) != cells_around.end())
+                continue;
+            
+            Cell new_cell(pos, cell.counter + 1);
+            cells_around.emplace_back(new_cell);
+
+            if(pos == end)
+            {
+                solved = true;
+                break;
+            }
+
+            queue.emplace(new_cell);
+        }
+    }
+
+    return cells_around;
+}
+
+void MarkCellCounters(Grid<int>& grid, const std::vector<Cell>& cells)
+{
+    for(const Cell& cell: cells)
+    {
+        grid.Set(cell.pos, cell.counter);
+    }
+}
+
+std::vector<Vec2i> GetPath(const Grid<int>& grid, const Vec2i& start, const Vec2i& finish)
+{
+    std::vector<Vec2i> path;
+    path.emplace_back(start);
+
+    while(path.back() != finish)
+    {
+        const Vec2i& point = path.back();
+        Cell lowest_value_cell(point, 9999);
+
+        for(const Vec2i& pos: grid.GetAdjecentTo(point))
+        {
+            if(grid.Get(pos) < lowest_value_cell.counter)
+            {
+                Cell new_lowest_value_cell(pos, grid.Get(pos));
+                lowest_value_cell = new_lowest_value_cell;
+            }
+        }
+        path.emplace_back(lowest_value_cell.pos);
+    }
+
+    return path;
 }
 
 
