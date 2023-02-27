@@ -2,14 +2,17 @@
 #include <iomanip>
 #include <iostream>
 #include <queue>
+#include <SDL2/SDL.h>
 #include "Grid.hpp"
 
 
 
 // TODO: Prevent looping infinitely if grid is not solvable
+// TODO: Choose start and finish position, after grid size is set
 
 void PrintGrid(const Grid<int>& grid);
 void PrintGrid(const Grid<char>& grid);
+void DrawGrid(const Grid<char>& grid, SDL_Renderer* renderer);
 
 struct Cell
 {
@@ -23,11 +26,11 @@ struct Cell
 
 int main()
 {
+// 0) Choose grid size
     const int min_grid_quadrant_size = 5;
     const int max_grid_quadrant_size = 20;
     Vec2i grid_size(0,0);
 
-    // Choose grid size
     while(true)
     {
         std::cout << "Choose grid size(" << min_grid_quadrant_size << '-' << max_grid_quadrant_size << "): ";
@@ -54,6 +57,13 @@ int main()
         break;
     }
     grid_size.y = grid_size.x;
+
+
+// 0.5) Initalize SDL2
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_CreateWindowAndRenderer(50 * grid_size.x, 50 * grid_size.y, 0, &window, &renderer);
 
 
     // Stages of pathfinding:
@@ -87,7 +97,7 @@ int main()
     inital_grid.Set(Vec2i(2,2), wall_mark);   // Add some obstacles
     inital_grid.Set(Vec2i(3,3), wall_mark);
     inital_grid.Set(Vec2i(4,4), wall_mark);
-    //inital_grid.Set(Vec2i(5,5), wall_mark);
+    inital_grid.Set(Vec2i(5,5), wall_mark);
     inital_grid.Set(Vec2i(6,6), wall_mark);
     inital_grid.Set(Vec2i(6,7), wall_mark);
     inital_grid.Set(Vec2i(6,8), wall_mark);
@@ -184,6 +194,27 @@ int main()
     }
     PrintGrid(solved_grid);
 
+
+    DrawGrid(solved_grid, renderer);
+    
+    SDL_Event e;
+    bool quit = false;
+    while(quit == false)
+    {
+        SDL_WaitEvent(&e);
+        switch(e.type)
+        {
+            case SDL_KEYUP:
+                quit = true;
+                break;
+        }
+    }
+
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
     return 0;
 }
 
@@ -214,4 +245,27 @@ void PrintGrid(const Grid<char>& grid)
         std::cout << std::endl;
     }
     std::cout << std::endl;
+}
+
+void DrawGrid(const Grid<char>& grid, SDL_Renderer* renderer)
+{
+    for(int y = 0; y < grid.Size().y; ++y)
+    {
+        for(int x = 0; x < grid.Size().x; ++x)
+        {
+            if(grid.Get(Vec2i(x,y)) == '.')
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+            else if(grid.Get(Vec2i(x,y)) == 'X')
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+            else if(grid.Get(Vec2i(x,y)) == 'o')
+                SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
+            else if(grid.Get(Vec2i(x,y)) == 'S')
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
+            else if(grid.Get(Vec2i(x,y)) == 'F')
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+            SDL_Rect rect{x*50, y*50, 50, 50};
+            SDL_RenderFillRect(renderer, &rect);
+        }
+    }
+    SDL_RenderPresent(renderer);
 }
