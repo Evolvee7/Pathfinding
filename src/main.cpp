@@ -1,9 +1,12 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <queue>
 #include "Grid.hpp"
 
 
+
+// TODO: Prevent looping infinitely if grid is not solvable
 
 void PrintGrid(const Grid<int>& grid);
 void PrintGrid(const Grid<char>& grid);
@@ -20,70 +23,71 @@ struct Cell
 
 int main()
 {
+    // Stages:
+    // 1) make solvable grid
+    // 2) starting at finish:
+    //    a) add finish cell with counter = 0 to queue and main_list
+    //    b) for each element in queue seek for first element which:
+    //        - isnt wall
+    //        - isnt already in main_list
+    //    c) add it to queue and main_list
+    //    d) if not reached start return to b)
+    // 3) mark cells counter values onto other grid
+    // 4) path goes from start and follows lowest counter values around adjecent fields
+
     char empty_mark = '.';
     char wall_mark = 'X';
     char finish_mark = 'F';
     char start_mark = 'S';
-    char path_mark= 'o';
 
     Vec2i start(1,2);
     Vec2i finish(8,8);
-
     Vec2i grid_size(10,10);
 
-    // Keeps track of all created Cells
-    std::vector<Cell> main_list;
+// 1) Make solvable grid
 
-    // Temporary stores outside Cells
-    std::queue<Cell> queue;
-
-
-    // Grid to hold inital state
     Grid<char> inital_grid(grid_size);
     inital_grid.Fill(empty_mark);
     inital_grid.Outline(wall_mark);
     inital_grid.Set(start, start_mark);
     inital_grid.Set(finish, finish_mark);
 
-    inital_grid.Set(Vec2i(2,2), wall_mark);   // Some obstacles
+    inital_grid.Set(Vec2i(2,2), wall_mark);   // Add some obstacles
     inital_grid.Set(Vec2i(3,3), wall_mark);
     inital_grid.Set(Vec2i(4,4), wall_mark);
-    inital_grid.Set(Vec2i(5,5), wall_mark);
+    //inital_grid.Set(Vec2i(5,5), wall_mark);
     inital_grid.Set(Vec2i(6,6), wall_mark);
     inital_grid.Set(Vec2i(6,7), wall_mark);
     inital_grid.Set(Vec2i(6,8), wall_mark);
 
 
-    // Make inital Cell at finish
+// 2) Make cells phase
+
+    // Keeps track of all created Cells
+    std::vector<Cell> main_list;
+
+    // Temporary stores Cells
+    std::queue<Cell> queue;
+
+    // Start from finish
     Cell inital_cell(finish, 0);
     main_list.emplace_back(inital_cell);
     queue.emplace(inital_cell);
-
 
     bool solved = false;
     while(solved == false) 
     {
         const Cell& cell = queue.front();
-        queue.pop();
+        
         for(const Vec2i& pos: inital_grid.GetAdjecentTo(cell.pos))
         {
-            // Skip wall
+            // Skip if position is occupied by wall
             if(inital_grid.Get(pos) == wall_mark)
                 continue;
-
-            // Skip if cell position already exists in main_list
-            bool exists = false;
-            for(const Cell& cell: main_list)
-            {
-                if(cell.pos == pos)
-                {
-                    exists = true;
-                    break;
-                }
-            }
-            if(exists == true)
-                continue;
             
+            // Skip if position already exists in main_list
+            if(std::find_if(main_list.begin(), main_list.end(), [&](const Cell& cell){ return cell.pos == pos; }) != main_list.end())
+                continue;
             
             Cell new_cell(pos, cell.counter + 1);
             main_list.emplace_back(new_cell);
@@ -94,9 +98,13 @@ int main()
                 break;
             }
 
+            queue.pop();
             queue.emplace(new_cell);
         }
     }
+
+
+// 3) Mark cells counter values
 
     // Grid to mark counter values
     Grid<int> counter_grid(grid_size);
@@ -109,10 +117,13 @@ int main()
     PrintGrid(counter_grid);
 
 
-    // Seek the shortest path starting from S
+// 4) Path creation phase
+
+    char path_mark= 'o';
     std::vector<Vec2i> path;
     path.emplace_back(start);
-    while(!(path.back() == finish))
+
+    while(path.back() != finish)
     {
         const Vec2i& point = path.back();
         Cell lowest_value_cell(point, 9999);
@@ -128,7 +139,6 @@ int main()
 
         path.emplace_back(lowest_value_cell.pos);
     }
-
 
     // Grid with the shortest path
     Grid<char> final_grid(inital_grid);
