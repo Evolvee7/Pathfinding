@@ -11,8 +11,13 @@ struct Vec2i
     {
     }
 
-    bool operator==(const Vec2i& other_pos) const
+    bool operator==(const Vec2i& other) const
     {
-        return x == other_pos.x && y == other_pos.y;
+        return x == other.x && y == other.y;
+    }
+
+    bool operator!=(const Vec2i& other) const
+    {
+        return !operator==(other);
     }
 };
