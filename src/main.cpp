@@ -3,7 +3,7 @@
 #include <iostream>
 #include <queue>
 #include <SDL2/SDL.h>
-#include "Grid.hpp"
+#include "PathfindingGrid.hpp"
 
 
 
@@ -11,23 +11,11 @@
 // TODO: Choose start and finish position, after grid size is set
 
 
-struct Cell
-{
-    Vec2i pos;
-    int counter;
-
-    Cell(const Vec2i& pos, int counter): pos(pos), counter(counter)
-    {
-    }
-};
-
-std::vector<Cell> GetCellsAround(const Grid<char>& grid, const Vec2i& begin, const Vec2i& end, char wall_mark);
+std::vector<Cell> GetCellsAround(const Grid<char>& grid, const Vec2i& begin, const Vec2i& end);
 void MarkCellCounters(Grid<int>& grid, const std::vector<Cell>& cells);
 std::vector<Vec2i> GetPath(const Grid<int>& grid, const Vec2i& start, const Vec2i& finish);
 
 void PrintGrid(const Grid<int>& grid);
-void PrintGrid(const Grid<char>& grid);
-void DrawGrid(const Grid<char>& grid, SDL_Renderer* renderer);
 
 
 int main()
@@ -84,35 +72,30 @@ int main()
     // 3) mark cells counter values onto other grid
     // 4) path goes from start and follows lowest counter values around adjecent fields
 
-    char empty_mark = '.';
-    char wall_mark = 'X';
-    char finish_mark = 'F';
-    char start_mark = 'S';
-
-    Vec2i start(1,2);
-    Vec2i finish(8,8);
+    const Vec2i start(1,2);
+    const Vec2i finish(8,8);
 
 // 1) Make solvable grid
 
-    Grid<char> inital_grid(grid_size);
-    inital_grid.Fill(empty_mark);
-    inital_grid.Outline(wall_mark);
-    inital_grid.Set(start, start_mark);
-    inital_grid.Set(finish, finish_mark);
+    PathfindingGrid inital_grid(grid_size, start, finish);
+    inital_grid.Fill(Mark::empty);
+    inital_grid.Outline(Mark::wall);
+    inital_grid.Set(start, Mark::start);
+    inital_grid.Set(finish, Mark::finish);
 
-    inital_grid.Set(Vec2i(2,2), wall_mark);   // Add some obstacles
-    inital_grid.Set(Vec2i(3,3), wall_mark);
-    inital_grid.Set(Vec2i(4,4), wall_mark);
-    inital_grid.Set(Vec2i(5,5), wall_mark);
-    inital_grid.Set(Vec2i(6,6), wall_mark);
-    inital_grid.Set(Vec2i(6,7), wall_mark);
-    inital_grid.Set(Vec2i(6,8), wall_mark);
+    inital_grid.Set(Vec2i(2,2), Mark::wall);   // Add some obstacles
+    inital_grid.Set(Vec2i(3,3), Mark::wall);
+    inital_grid.Set(Vec2i(4,4), Mark::wall);
+    inital_grid.Set(Vec2i(5,5), Mark::wall);
+    inital_grid.Set(Vec2i(6,6), Mark::wall);
+    inital_grid.Set(Vec2i(6,7), Mark::wall);
+    inital_grid.Set(Vec2i(6,8), Mark::wall);
 
 
 // 2) Make cells phase
 
     
-    std::vector<Cell> main_list = GetCellsAround(inital_grid, finish, start, wall_mark);
+    std::vector<Cell> main_list = GetCellsAround(inital_grid, finish, start);
 
 
 // 3) Mark cells counter values
@@ -135,17 +118,16 @@ int main()
 // 5) Show solved grid
 
     char path_mark = 'o';
-    Grid<char> solved_grid(inital_grid);
+    PathfindingGrid solved_grid(inital_grid);
 
     for(const Vec2i& pos: path)
     {
         if(pos != start && pos != finish)
             solved_grid.Set(pos, path_mark);
     }
-    PrintGrid(solved_grid);
+    solved_grid.Print();
 
-
-    DrawGrid(solved_grid, renderer);
+    solved_grid.Draw(renderer);
     
     SDL_Event e;
     bool quit = false;
@@ -178,7 +160,7 @@ int main()
 
 
 
-std::vector<Cell> GetCellsAround(const Grid<char>& grid, const Vec2i& begin, const Vec2i& end, char wall_mark)
+std::vector<Cell> GetCellsAround(const Grid<char>& grid, const Vec2i& begin, const Vec2i& end)
 {
     std::vector<Cell> cells_around;
 
@@ -193,13 +175,17 @@ std::vector<Cell> GetCellsAround(const Grid<char>& grid, const Vec2i& begin, con
     bool solved = false;
     while(solved == false) 
     {
+        //
+        // IF QUEUE IS EMPTY HERE -> GRID IS NOT SOLVABLE?
+        //
+
         const Cell cell = queue.front();
         queue.pop();
         
         for(const Vec2i& pos: grid.GetAdjecentTo(cell.pos))
         {
             // Skip if position is occupied by wall
-            if(grid.Get(pos) == wall_mark)
+            if(grid.Get(pos) == Mark::wall)
                 continue;
             
             // Skip if position is already stored
@@ -268,40 +254,4 @@ void PrintGrid(const Grid<int>& grid)
         std::cout << std::endl;
     }
     std::cout << std::endl;
-}
-
-void PrintGrid(const Grid<char>& grid)
-{
-    for(int y = 0; y < grid.Size().y; ++y)
-    {
-        for(int x = 0; x < grid.Size().x; ++x)
-        {
-            std::cout << std::setw(2) << grid.Get(Vec2i(x,y)) << ' ';
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-}
-
-void DrawGrid(const Grid<char>& grid, SDL_Renderer* renderer)
-{
-    for(int y = 0; y < grid.Size().y; ++y)
-    {
-        for(int x = 0; x < grid.Size().x; ++x)
-        {
-            if(grid.Get(Vec2i(x,y)) == '.')
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-            else if(grid.Get(Vec2i(x,y)) == 'X')
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-            else if(grid.Get(Vec2i(x,y)) == 'o')
-                SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
-            else if(grid.Get(Vec2i(x,y)) == 'S')
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
-            else if(grid.Get(Vec2i(x,y)) == 'F')
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-            SDL_Rect rect{x*50, y*50, 50, 50};
-            SDL_RenderFillRect(renderer, &rect);
-        }
-    }
-    SDL_RenderPresent(renderer);
 }
