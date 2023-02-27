@@ -23,6 +23,39 @@ struct Cell
 
 int main()
 {
+    const int min_grid_quadrant_size = 5;
+    const int max_grid_quadrant_size = 20;
+    Vec2i grid_size(0,0);
+
+    // Choose grid size
+    while(true)
+    {
+        std::cout << "Choose grid size(" << min_grid_quadrant_size << '-' << max_grid_quadrant_size << "): ";
+        std::cin >> grid_size.x;
+
+        if(std::cin.fail())
+        {
+            std::cout << "ERROR: Input must be integer value." << std::endl;
+            std::cin.clear();
+            std::cin.ignore(1000, '\n');
+            continue;
+        }
+        if(grid_size.x < min_grid_quadrant_size)
+        {
+            std::cout << "ERROR: Input must be greater or equal to " << min_grid_quadrant_size << std::endl;
+            continue;
+        }
+        if(grid_size.x > max_grid_quadrant_size)
+        {
+            std::cout << "ERROR: Input must be less or equal to " << max_grid_quadrant_size << std::endl;
+            continue;
+        }
+
+        break;
+    }
+    grid_size.y = grid_size.x;
+
+
     // Stages of pathfinding:
     // 1) make solvable grid
     // 2) starting at finish:
@@ -42,7 +75,6 @@ int main()
 
     Vec2i start(1,2);
     Vec2i finish(8,8);
-    Vec2i grid_size(10,10);
 
 // 1) Make solvable grid
 
@@ -77,7 +109,8 @@ int main()
     bool solved = false;
     while(solved == false) 
     {
-        const Cell& cell = queue.front();
+        const Cell cell = queue.front();
+        queue.pop();
         
         for(const Vec2i& pos: inital_grid.GetAdjecentTo(cell.pos))
         {
@@ -98,7 +131,6 @@ int main()
                 break;
             }
 
-            queue.pop();
             queue.emplace(new_cell);
         }
     }
