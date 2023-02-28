@@ -1,15 +1,13 @@
-#include <algorithm>
 #include <iomanip>
 #include <iostream>
-#include <queue>
 #include <SDL2/SDL.h>
 #include "PathfindingGrid.hpp"
 
 
 
 // TODO: Prevent looping infinitely if grid is not solvable
-// TODO: Choose start and finish position, after grid size is set
 // TODO: Draw different color values on cells depending on counter values in cells positions
+//       OR draw cells counter values instead
 
 void PrintGrid(const Grid<int>& grid);
 
@@ -57,8 +55,8 @@ int main()
 
 
 
-    const Vec2i start(1,2);
-    const Vec2i finish(8,8);
+    const Vec2i start(1,1);
+    const Vec2i finish(grid_size.x-2, grid_size.y-2);
 
     PathfindingGrid grid(grid_size, start, finish);
 
@@ -82,13 +80,36 @@ int main()
         switch(e.type)
         {
             case SDL_KEYUP:
-                quit = true;
+                if(e.key.keysym.sym == SDLK_s)
+                {
+                    Vec2i mouse_pos(0,0);
+                    SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
+                    Vec2i grid_pos(mouse_pos/cell_size.x);
+
+                    grid.ResetStart(grid_pos);
+                    grid.Solve();
+                    grid.Draw(renderer, cell_size);
+                }
+                else if(e.key.keysym.sym == SDLK_f)
+                {
+                    Vec2i mouse_pos(0,0);
+                    SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
+                    Vec2i grid_pos(mouse_pos/cell_size.x);
+
+                    grid.ResetFinish(grid_pos);
+                    grid.Solve();
+                    grid.Draw(renderer, cell_size);
+                }
+                else
+                {
+                    quit = true;
+                }
                 break;
+
             case SDL_MOUSEBUTTONUP:
                 Vec2i mouse_pos(0,0);
                 SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
-
-                Vec2i grid_pos(mouse_pos/50);
+                Vec2i grid_pos(mouse_pos/cell_size.x);
                 char grid_mark = grid.Get(grid_pos);
                 switch(grid_mark)
                 {
@@ -100,18 +121,9 @@ int main()
                         grid_mark = Mark::empty;
                         break;
                     
-                    case Mark::start:
-                        //grid_mark = Mark::finish;
-                        break;
-                    
-                    case Mark::finish:
-                        //grid_mark = Mark::empty;
-                        break;
-                    
                     case Mark::path:
                         grid_mark = Mark::wall;
                         break;
-                    
                 }
                 grid.Set(grid_pos, grid_mark);
                 grid.Solve();

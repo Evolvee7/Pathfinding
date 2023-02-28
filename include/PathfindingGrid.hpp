@@ -1,7 +1,9 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <queue>
 #include <SDL2/SDL_render.h>
 #include "Grid.hpp"
 
@@ -33,6 +35,9 @@ public:
 
     bool Solve();
 
+    void ResetStart(const Vec2i& new_pos);
+    void ResetFinish(const Vec2i& new_pos);
+
     bool IsSolved() const { return m_solved; }
     const std::vector<Vec2i>& GetPath() const { return m_path; }
     const Grid<int>& GetCounterGrid() const { return m_counter_grid; }
@@ -54,7 +59,7 @@ private:
     const int m_unused = 9999;
 
 private:
-    void CreateCellsAround();
+    bool CreateCellsAround(const Vec2i& begin, const Vec2i& end);
     void MarkCellCounters();
     void CreatePath();
     void MarkPath();
@@ -81,7 +86,10 @@ bool PathfindingGrid::Solve()
     m_cells.clear();
     m_path.clear();
 
-    CreateCellsAround();
+
+    if(CreateCellsAround(m_finish, m_start) == false)
+        return m_solved;
+
     m_counter_grid.Fill(m_unused);
     MarkCellCounters();
     CreatePath();
@@ -89,6 +97,30 @@ bool PathfindingGrid::Solve()
 
     m_solved = true;
     return m_solved;
+}
+
+void PathfindingGrid::ResetStart(const Vec2i& new_pos)
+{
+    if(new_pos.x < 0 || new_pos.x > m_size.x - 1)
+        return;
+    if(new_pos.y < 0 || new_pos.y > m_size.y - 1)
+        return;
+    
+    Set(m_start, Mark::empty);
+    m_start = new_pos;
+    Set(m_start, Mark::start);
+}
+
+void PathfindingGrid::ResetFinish(const Vec2i& new_pos)
+{
+    if(new_pos.x < 0 || new_pos.x > m_size.x - 1)
+        return;
+    if(new_pos.y < 0 || new_pos.y > m_size.y - 1)
+        return;
+    
+    Set(m_finish, Mark::empty);
+    m_finish = new_pos;
+    Set(m_finish, Mark::finish);
 }
 
 void PathfindingGrid::Print() const
@@ -111,17 +143,23 @@ void PathfindingGrid::Draw(SDL_Renderer* renderer, const Vec2i& cell_size) const
     {
         for(int x = 0; x < m_size.x; ++x)
         {
-            if(Get(Vec2i(x,y)) == '.')
+            const char mark = Get(Vec2i(x,y));
+            if(mark == Mark::empty)
                 SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-            else if(Get(Vec2i(x,y)) == 'X')
+            else if(mark == Mark::wall)
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-            else if(Get(Vec2i(x,y)) == 'o')
-                SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
-            else if(Get(Vec2i(x,y)) == 'S')
+            else if(mark == Mark::start)
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
-            else if(Get(Vec2i(x,y)) == 'F')
+            else if(mark == Mark::finish)
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-            
+            else if(mark == Mark::path)
+                SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
+            else
+            {
+                std::cerr << "ERROR: Undefined marker " << mark << " at pos (" << x << ',' << y << ")." << std::endl;
+                return;
+            }
+
             rect.x = x*cell_size.x;
             rect.y = y*cell_size.y;
             SDL_RenderFillRect(renderer, &rect);
@@ -132,25 +170,23 @@ void PathfindingGrid::Draw(SDL_Renderer* renderer, const Vec2i& cell_size) const
 
 
 
-void PathfindingGrid::CreateCellsAround()
+bool PathfindingGrid::CreateCellsAround(const Vec2i& begin, const Vec2i& end)
 {
     // Temporary stores Cells
     std::queue<Cell> queue;
 
     // Start from finish
-    Cell inital_cell(m_finish, 0);
+    Cell inital_cell(begin, 0);
     m_cells.emplace_back(inital_cell);
     queue.emplace(inital_cell);
 
-    bool solved = false;
-    while(solved == false) 
+    while(queue.empty() == false) 
     {
         //
         // IF QUEUE IS EMPTY HERE -> GRID IS NOT SOLVABLE?
         //
 
-        const Cell cell = queue.front();
-        queue.pop();
+        const Cell& cell = queue.front();
         
         for(const Vec2i& pos: GetAdjecentTo(cell.pos))
         {
@@ -165,15 +201,17 @@ void PathfindingGrid::CreateCellsAround()
             Cell new_cell(pos, cell.counter + 1);
             m_cells.emplace_back(new_cell);
 
-            if(pos == m_start)
+            if(pos == end)
             {
-                solved = true;
-                break;
+                return true;
             }
 
             queue.emplace(new_cell);
         }
+        queue.pop();
     }
+
+    return false;
 }
 
 void PathfindingGrid::MarkCellCounters()
