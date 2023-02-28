@@ -20,4 +20,9 @@ struct Vec2i
     {
         return !operator==(other);
     }
+
+    Vec2i operator/(int num) const
+    {
+        return Vec2i(x/num, y/num);
+    }
 };
