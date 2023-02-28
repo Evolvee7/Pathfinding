@@ -38,7 +38,7 @@ public:
     const Grid<int>& GetCounterGrid() const { return m_counter_grid; }
 
     void Print() const;
-    void Draw(SDL_Renderer* renderer) const;
+    void Draw(SDL_Renderer* renderer, const Vec2i& cell_size) const;
 
 private:
     Vec2i m_start;
@@ -104,8 +104,9 @@ void PathfindingGrid::Print() const
     std::cout << std::endl;
 }
 
-void PathfindingGrid::Draw(SDL_Renderer* renderer) const
+void PathfindingGrid::Draw(SDL_Renderer* renderer, const Vec2i& cell_size) const
 {
+    SDL_Rect rect{0, 0, cell_size.x, cell_size.y};
     for(int y = 0; y < m_size.y; ++y)
     {
         for(int x = 0; x < m_size.x; ++x)
@@ -120,7 +121,9 @@ void PathfindingGrid::Draw(SDL_Renderer* renderer) const
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
             else if(Get(Vec2i(x,y)) == 'F')
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-            SDL_Rect rect{x*50, y*50, 50, 50};
+            
+            rect.x = x*cell_size.x;
+            rect.y = y*cell_size.y;
             SDL_RenderFillRect(renderer, &rect);
         }
     }

@@ -9,13 +9,13 @@
 
 // TODO: Prevent looping infinitely if grid is not solvable
 // TODO: Choose start and finish position, after grid size is set
+// TODO: Draw different color values on cells depending on counter values in cells positions
 
 void PrintGrid(const Grid<int>& grid);
 
-
 int main()
 {
-// 0) Choose grid size
+    // Choose grid size
     const int min_grid_length = 5;
     const int max_grid_length = 20;
     Vec2i grid_size(0,0);
@@ -48,41 +48,30 @@ int main()
     grid_size.y = grid_size.x;
 
 
-// 0.5) Initalize SDL2
+    Vec2i cell_size(50, 50);
+    // Init SDL2
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window;
     SDL_Renderer* renderer;
-    SDL_CreateWindowAndRenderer(50 * grid_size.x, 50 * grid_size.y, 0, &window, &renderer);
+    SDL_CreateWindowAndRenderer(cell_size.x * grid_size.x, cell_size.y * grid_size.y, 0, &window, &renderer);
 
 
-    // Stages of pathfinding:
-    // 1) make solvable grid
-    // 2) starting at finish:
-    //    a) add finish cell with counter = 0 to queue and main_list
-    //    b) for each element in queue seek for first element which:
-    //        - isnt wall
-    //        - isnt already in main_list
-    //    c) add it to queue and main_list
-    //    d) if not reached start return to b)
-    // 3) mark cells counter values onto other grid
-    // 4) path goes from start and follows lowest counter values around adjecent fields
 
     const Vec2i start(1,2);
     const Vec2i finish(8,8);
 
     PathfindingGrid grid(grid_size, start, finish);
 
-    grid.Set(Vec2i(2,2), Mark::wall);   // Add some obstacles
-    grid.Set(Vec2i(3,3), Mark::wall);
-    grid.Set(Vec2i(4,4), Mark::wall);
-    grid.Set(Vec2i(5,5), Mark::wall);
-    grid.Set(Vec2i(6,6), Mark::wall);
-    grid.Set(Vec2i(6,7), Mark::wall);
-    grid.Set(Vec2i(6,8), Mark::wall);
+    //grid.Set(Vec2i(2,2), Mark::wall);   // Add some obstacles
+    //grid.Set(Vec2i(3,3), Mark::wall);
+    //grid.Set(Vec2i(4,4), Mark::wall);
+    //grid.Set(Vec2i(5,5), Mark::wall);
+    //grid.Set(Vec2i(6,6), Mark::wall);
+    //grid.Set(Vec2i(6,7), Mark::wall);
+    //grid.Set(Vec2i(6,8), Mark::wall);
 
     grid.Solve();
-
-    grid.Draw(renderer);
+    grid.Draw(renderer, cell_size);
 
     
     SDL_Event e;
@@ -126,7 +115,7 @@ int main()
                 }
                 grid.Set(grid_pos, grid_mark);
                 grid.Solve();
-                grid.Draw(renderer);
+                grid.Draw(renderer, cell_size);
 
                 // 1) Check if grid is solvable?
                 // 2) Update* grid only if:
