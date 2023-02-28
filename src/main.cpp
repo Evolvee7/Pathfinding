@@ -86,6 +86,11 @@ int main()
                     SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                     Vec2i grid_pos(mouse_pos/cell_size.x);
 
+                    if(grid_pos.x == 0 || grid_pos.x == grid_size.x-1)
+                        break;
+                    if(grid_pos.y == 0 || grid_pos.y == grid_size.y-1)
+                        break; 
+
                     grid.ResetStart(grid_pos);
                     grid.Solve();
                     grid.Draw(renderer, cell_size);
@@ -95,6 +100,11 @@ int main()
                     Vec2i mouse_pos(0,0);
                     SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                     Vec2i grid_pos(mouse_pos/cell_size.x);
+
+                    if(grid_pos.x == 0 || grid_pos.x == grid_size.x-1)
+                        break;
+                    if(grid_pos.y == 0 || grid_pos.y == grid_size.y-1)
+                        break; 
 
                     grid.ResetFinish(grid_pos);
                     grid.Solve();
@@ -110,6 +120,12 @@ int main()
                 Vec2i mouse_pos(0,0);
                 SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                 Vec2i grid_pos(mouse_pos/cell_size.x);
+
+                if(grid_pos.x == 0 || grid_pos.x == grid_size.x-1)
+                    break;
+                if(grid_pos.y == 0 || grid_pos.y == grid_size.y-1)
+                    break;    
+
                 char grid_mark = grid.Get(grid_pos);
                 switch(grid_mark)
                 {

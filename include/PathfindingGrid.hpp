@@ -105,6 +105,8 @@ void PathfindingGrid::ResetStart(const Vec2i& new_pos)
         return;
     if(new_pos.y < 0 || new_pos.y > m_size.y - 1)
         return;
+    if(Get(new_pos) == Mark::finish)
+        return;
     
     Set(m_start, Mark::empty);
     m_start = new_pos;
@@ -116,6 +118,8 @@ void PathfindingGrid::ResetFinish(const Vec2i& new_pos)
     if(new_pos.x < 0 || new_pos.x > m_size.x - 1)
         return;
     if(new_pos.y < 0 || new_pos.y > m_size.y - 1)
+        return;
+    if(Get(new_pos) == Mark::start)
         return;
     
     Set(m_finish, Mark::empty);
