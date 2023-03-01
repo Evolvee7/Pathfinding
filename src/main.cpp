@@ -5,18 +5,18 @@
 
 
 
-// TODO: Prevent looping infinitely if grid is not solvable
+// TODO: Make grid-like view
 // TODO: Draw different color values on cells depending on counter values in cells positions
 //       OR draw cells counter values instead
+// TODO: Add hold-n-drag wall putting
 
 void PrintGrid(const Grid<int>& grid);
 
 int main()
 {
-    // Choose grid size
+    Vec2i grid_size(0,0);
     const int min_grid_length = 5;
     const int max_grid_length = 20;
-    Vec2i grid_size(0,0);
 
     while(true)
     {
@@ -86,11 +86,6 @@ int main()
                     SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                     Vec2i grid_pos(mouse_pos/cell_size.x);
 
-                    if(grid_pos.x == 0 || grid_pos.x == grid_size.x-1)
-                        break;
-                    if(grid_pos.y == 0 || grid_pos.y == grid_size.y-1)
-                        break; 
-
                     grid.ResetStart(grid_pos);
                     grid.Solve();
                     grid.Draw(renderer, cell_size);
@@ -100,11 +95,6 @@ int main()
                     Vec2i mouse_pos(0,0);
                     SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                     Vec2i grid_pos(mouse_pos/cell_size.x);
-
-                    if(grid_pos.x == 0 || grid_pos.x == grid_size.x-1)
-                        break;
-                    if(grid_pos.y == 0 || grid_pos.y == grid_size.y-1)
-                        break; 
 
                     grid.ResetFinish(grid_pos);
                     grid.Solve();
@@ -120,11 +110,6 @@ int main()
                 Vec2i mouse_pos(0,0);
                 SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                 Vec2i grid_pos(mouse_pos/cell_size.x);
-
-                if(grid_pos.x == 0 || grid_pos.x == grid_size.x-1)
-                    break;
-                if(grid_pos.y == 0 || grid_pos.y == grid_size.y-1)
-                    break;    
 
                 char grid_mark = grid.Get(grid_pos);
                 switch(grid_mark)

@@ -70,7 +70,7 @@ PathfindingGrid::PathfindingGrid(const Vec2i& size, const Vec2i& start, const Ve
     m_solved = false;
 
     Fill(Mark::empty);
-    Outline(Mark::wall);
+    //Outline(Mark::wall);
     Set(start, Mark::start);
     Set(finish, Mark::finish);
 }
@@ -194,6 +194,11 @@ bool PathfindingGrid::CreateCellsAround(const Vec2i& begin, const Vec2i& end)
         
         for(const Vec2i& pos: GetAdjecentTo(cell.pos))
         {
+            if(pos.x < 0 || pos.x > m_size.x-1)
+                continue;
+            if(pos.y < 0 || pos.y > m_size.y-1)
+                continue;
+
             // Skip if position is occupied by wall
             if(Get(pos) == Mark::wall)
                 continue;
