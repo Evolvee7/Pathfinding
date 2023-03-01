@@ -88,10 +88,14 @@ std::vector<Vec2i> Grid<T>::GetAdjecentTo(const Vec2i& pos) const
 {
     std::vector<Vec2i> adjecent;
     adjecent.reserve(4);
-    adjecent.emplace_back(Vec2i(pos.x-1,pos.y));
-    adjecent.emplace_back(Vec2i(pos.x+1,pos.y));
-    adjecent.emplace_back(Vec2i(pos.x,pos.y-1));
-    adjecent.emplace_back(Vec2i(pos.x,pos.y+1));
+    if(pos.x > 0)
+        adjecent.emplace_back(Vec2i(pos.x-1,pos.y));
+    if(pos.x < m_size.x-1)
+        adjecent.emplace_back(Vec2i(pos.x+1,pos.y));
+    if(pos.y > 0)
+        adjecent.emplace_back(Vec2i(pos.x,pos.y-1));
+    if(pos.y < m_size.y-1)
+        adjecent.emplace_back(Vec2i(pos.x,pos.y+1));
     return adjecent;
 }
 
