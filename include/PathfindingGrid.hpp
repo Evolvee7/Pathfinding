@@ -167,6 +167,9 @@ void PathfindingGrid::Draw(SDL_Renderer* renderer, const Vec2i& cell_size) const
             rect.x = x*cell_size.x;
             rect.y = y*cell_size.y;
             SDL_RenderFillRect(renderer, &rect);
+
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+            SDL_RenderDrawRect(renderer, &rect);
         }
     }
     SDL_RenderPresent(renderer);
