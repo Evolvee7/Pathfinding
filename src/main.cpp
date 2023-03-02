@@ -1,11 +1,10 @@
 #include <iomanip>
 #include <iostream>
 #include <SDL2/SDL.h>
-#include "PathfindingGrid.hpp"
+#include "SampleAlgo.hpp"
 
 
 
-// TODO: Make grid-like view
 // TODO: Draw different color values on cells depending on counter values in cells positions
 //       OR draw cells counter values instead
 // TODO: Add hold-n-drag wall putting
@@ -56,89 +55,66 @@ int main()
 
 
     const Vec2i start(1,1);
-    const Vec2i finish(grid_size.x-2, grid_size.y-2);
+    const Vec2i goal(grid_size.x-2, grid_size.y-2);
 
-    PathfindingGrid grid(grid_size, start, finish);
+    PathfindingGrid grid(grid_size, start, goal);
+    SampleAlgo algo;
 
-    //grid.Set(Vec2i(2,2), Mark::wall);   // Add some obstacles
-    //grid.Set(Vec2i(3,3), Mark::wall);
-    //grid.Set(Vec2i(4,4), Mark::wall);
-    //grid.Set(Vec2i(5,5), Mark::wall);
-    //grid.Set(Vec2i(6,6), Mark::wall);
-    //grid.Set(Vec2i(6,7), Mark::wall);
-    //grid.Set(Vec2i(6,8), Mark::wall);
 
-    grid.Solve();
-    grid.Draw(renderer, cell_size);
-
+    algo.Visualize(renderer, grid, cell_size);
+    
     
     SDL_Event e;
     bool quit = false;
     while(quit == false)
     {
         SDL_WaitEvent(&e);
-        switch(e.type)
+        if(e.type == SDL_KEYUP)
         {
-            case SDL_KEYUP:
-                if(e.key.keysym.sym == SDLK_s)
-                {
-                    Vec2i mouse_pos(0,0);
-                    SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
-                    Vec2i grid_pos(mouse_pos/cell_size.x);
-
-                    grid.ResetStart(grid_pos);
-                    grid.Solve();
-                    grid.Draw(renderer, cell_size);
-                }
-                else if(e.key.keysym.sym == SDLK_f)
-                {
-                    Vec2i mouse_pos(0,0);
-                    SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
-                    Vec2i grid_pos(mouse_pos/cell_size.x);
-
-                    grid.ResetFinish(grid_pos);
-                    grid.Solve();
-                    grid.Draw(renderer, cell_size);
-                }
-                else
-                {
-                    quit = true;
-                }
-                break;
-
-            case SDL_MOUSEBUTTONUP:
+            if(e.key.keysym.sym == SDLK_s)
+            {
                 Vec2i mouse_pos(0,0);
                 SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                 Vec2i grid_pos(mouse_pos/cell_size.x);
 
-                char grid_mark = grid.Get(grid_pos);
-                switch(grid_mark)
-                {
-                    case Mark::empty:
-                        grid_mark = Mark::wall;
-                        break;
-                    
-                    case Mark::wall:
-                        grid_mark = Mark::empty;
-                        break;
-                    
-                    case Mark::path:
-                        grid_mark = Mark::wall;
-                        break;
-                }
-                grid.Set(grid_pos, grid_mark);
-                grid.Solve();
-                grid.Draw(renderer, cell_size);
+                grid.SetStart(grid_pos);
+                algo.Visualize(renderer, grid, cell_size);
+            }
+            else if(e.key.keysym.sym == SDLK_f)
+            {
+                Vec2i mouse_pos(0,0);
+                SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
+                Vec2i grid_pos(mouse_pos/cell_size.x);
 
-                // 1) Check if grid is solvable?
-                // 2) Update* grid only if:
-                // - only 1 start and finish will exist
-                //
-                // *Update = change . -> X -> S -> F -> .   ,etc...
-                break;
+                grid.SetFinish(grid_pos);
+                algo.Visualize(renderer, grid, cell_size);
+            }
+            else
+            {
+                quit = true;
+            }
+        }
+        else if(e.type == SDL_MOUSEBUTTONUP)
+        {
+            Vec2i mouse_pos(0,0);
+            SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
+            Vec2i grid_pos(mouse_pos/cell_size.x);
+
+            char grid_mark = grid.Get(grid_pos);
+            switch(grid_mark)
+            {
+                case Mark::empty:
+                    grid_mark = Mark::wall;
+                    break;
+                
+                case Mark::wall:
+                    grid_mark = Mark::empty;
+                    break;
+            }
+            grid.Set(grid_pos, grid_mark);
+            algo.Visualize(renderer, grid, cell_size);
         }
     }
-
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
