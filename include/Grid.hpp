@@ -78,7 +78,7 @@ void Grid<T>::Fill(const T& value)
     {
         for(int x = 0; x < m_size.x; ++x)
         {
-            Set(Vec2i(x,y), value);
+            Set(Vec2i{x,y}, value);
         }
     }
 }
@@ -89,13 +89,13 @@ std::vector<Vec2i> Grid<T>::GetAdjecentTo(const Vec2i& pos) const
     std::vector<Vec2i> adjecent;
     adjecent.reserve(4);
     if(pos.x > 0)
-        adjecent.emplace_back(Vec2i(pos.x-1,pos.y));
+        adjecent.emplace_back(Vec2i{pos.x-1,pos.y});
     if(pos.x < m_size.x-1)
-        adjecent.emplace_back(Vec2i(pos.x+1,pos.y));
+        adjecent.emplace_back(Vec2i{pos.x+1,pos.y});
     if(pos.y > 0)
-        adjecent.emplace_back(Vec2i(pos.x,pos.y-1));
+        adjecent.emplace_back(Vec2i{pos.x,pos.y-1});
     if(pos.y < m_size.y-1)
-        adjecent.emplace_back(Vec2i(pos.x,pos.y+1));
+        adjecent.emplace_back(Vec2i{pos.x,pos.y+1});
     return adjecent;
 }
 
@@ -104,12 +104,12 @@ void Grid<T>::Outline(const T& value)
 {
     for(int x = 0; x < m_size.x; ++x)
     {
-        Set(Vec2i(x, 0), value);
-        Set(Vec2i(x, m_size.y-1), value);
+        Set(Vec2i{x, 0}, value);
+        Set(Vec2i{x, m_size.y-1}, value);
     }
     for(int y = 1; y < m_size.y - 1; ++y)   // Skip first row and last row (already filled)
     {
-        Set(Vec2i(0, y), value);
-        Set(Vec2i(m_size.x-1, y), value);
+        Set(Vec2i{0, y}, value);
+        Set(Vec2i{m_size.x-1, y}, value);
     }
 }

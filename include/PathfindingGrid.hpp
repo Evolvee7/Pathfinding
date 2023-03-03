@@ -78,7 +78,7 @@ void PathfindingGrid::Print() const
     {
         for(int x = 0; x < m_size.x; ++x)
         {
-            std::cout << Get(Vec2i(x,y)) << ' ';
+            std::cout << Get(Vec2i{x,y}) << ' ';
         }
         std::cout << std::endl;
     }
@@ -92,7 +92,7 @@ void PathfindingGrid::Draw(SDL_Renderer* renderer, const Vec2i& cell_size) const
     {
         for(int x = 0; x < m_size.x; ++x)
         {
-            const char mark = Get(Vec2i(x,y));
+            const char mark = Get(Vec2i{x,y});
             if(mark == Mark::empty)
                 SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
             else if(mark == Mark::wall)

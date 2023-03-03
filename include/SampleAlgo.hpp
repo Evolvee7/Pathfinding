@@ -97,6 +97,21 @@ void SampleAlgo::Visualize(SDL_Renderer* renderer, const PathfindingGrid& grid, 
     grid.Draw(renderer, cell_size);
 
     SDL_Rect rect{0, 0, cell_size.x, cell_size.y};
+    // Draw cells
+    for(const Cell& cell: CreateCellsAround(grid))
+    {
+        if(cell.pos == grid.Start() || cell.pos == grid.Goal())
+            continue;
+        
+        SDL_SetRenderDrawColor(renderer, 255, 255, 50, SDL_ALPHA_OPAQUE);
+        rect.x = cell.pos.x*cell_size.x;
+        rect.y = cell.pos.y*cell_size.y;
+        SDL_RenderFillRect(renderer, &rect);
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderDrawRect(renderer, &rect);
+    }
+    // Draw path
     for(const Vec2i& pos: GetPath(grid))
     {
         if(pos == grid.Start() || pos == grid.Goal())

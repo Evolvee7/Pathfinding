@@ -9,11 +9,9 @@
 //       OR draw cells counter values instead
 // TODO: Add hold-n-drag wall putting
 
-void PrintGrid(const Grid<int>& grid);
-
 int main()
 {
-    Vec2i grid_size(0,0);
+    Vec2i grid_size;
     const int min_grid_length = 5;
     const int max_grid_length = 20;
 
@@ -45,7 +43,7 @@ int main()
     grid_size.y = grid_size.x;
 
 
-    Vec2i cell_size(50, 50);
+    Vec2i cell_size{50,50};
     // Init SDL2
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window;
@@ -54,8 +52,8 @@ int main()
 
 
 
-    const Vec2i start(1,1);
-    const Vec2i goal(grid_size.x-2, grid_size.y-2);
+    const Vec2i start{1,1};
+    const Vec2i goal{grid_size.x-2, grid_size.y-2};
 
     PathfindingGrid grid(grid_size, start, goal);
     SampleAlgo algo;
@@ -73,7 +71,7 @@ int main()
         {
             if(e.key.keysym.sym == SDLK_s)
             {
-                Vec2i mouse_pos(0,0);
+                Vec2i mouse_pos;
                 SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                 Vec2i grid_pos(mouse_pos/cell_size.x);
 
@@ -82,7 +80,7 @@ int main()
             }
             else if(e.key.keysym.sym == SDLK_f)
             {
-                Vec2i mouse_pos(0,0);
+                Vec2i mouse_pos;
                 SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
                 Vec2i grid_pos(mouse_pos/cell_size.x);
 
@@ -96,7 +94,7 @@ int main()
         }
         else if(e.type == SDL_MOUSEBUTTONUP)
         {
-            Vec2i mouse_pos(0,0);
+            Vec2i mouse_pos;
             SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
             Vec2i grid_pos(mouse_pos/cell_size.x);
 
@@ -121,17 +119,4 @@ int main()
     SDL_Quit();
 
     return 0;
-}
-
-void PrintGrid(const Grid<int>& grid)
-{
-    for(int y = 0; y < grid.Size().y; ++y)
-    {
-        for(int x = 0; x < grid.Size().x; ++x)
-        {
-            std::cout << std::setw(4) << grid.Get(Vec2i(x,y)) << ' ';
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
 }
